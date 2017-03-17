@@ -30,3 +30,17 @@ Returns an array of the closest points from a given location in order of increas
 - `maxResults`: (optional) maximum number of points to return (`Infinity` by default).
 - `maxDistance`: (optional) maximum distance to search within (`Infinity` by default).
 - `filterFn`: (optional) a function to filter the results with.
+
+### Performance
+
+`geokdbush` is incredibly fast.
+The results below were obtained by running `npm run bench`
+on Node v7.7.2, Macbook Pro Retina 15 mid-2012.
+
+benchmark | geokdbush | sphere-knn | naive
+--- | ---: | ---: | ---:
+index 138398 points | 69ms | 1027ms | n/a
+query 1000 closest | 5ms | 5ms | 81ms
+query 50000 closest | 26ms | 391ms | 130ms
+query all 138398 | 63ms | 29.9s | 733ms
+1000 queries of 1 | 21ms | 169ms | 18.4s
