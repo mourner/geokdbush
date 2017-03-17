@@ -40,7 +40,7 @@ on Node v7.7.2, Macbook Pro Retina 15 mid-2012.
 benchmark | geokdbush | sphere-knn | naive
 --- | ---: | ---: | ---:
 index 138398 points | 69ms | 1027ms | n/a
-query 1000 closest | 5ms | 5ms | 81ms
-query 50000 closest | 26ms | 391ms | 130ms
-query all 138398 | 63ms | 29.9s | 733ms
-1000 queries of 1 | 21ms | 169ms | 18.4s
+query 1000 closest | 5ms | 5ms | 155ms (sort all)
+query 50000 closest | 26ms | 391ms | 155ms
+query all 138398 | 63ms | 29.9s | 155ms
+1000 queries of 1 | 21ms | 169ms | 18.4s (naive loop)

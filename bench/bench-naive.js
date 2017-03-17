@@ -1,7 +1,6 @@
 'use strict';
 
 var cities = require('all-the-cities');
-var select = require('quickselect');
 
 console.log('=== naive benchmark ===');
 
@@ -17,19 +16,12 @@ for (var i = 0; i < k; i++) randomPoints.push({
     lat: -90 + 180 * Math.random()
 });
 
-var compare = (a, b) => dist(p, a) - dist(p, b);
+var compareDist = (a, b) => a.dist - b.dist;
 
-console.time('query 1000 closest');
-select(cities.slice(), 1000, 0, n - 1, compare);
-console.timeEnd('query 1000 closest');
-
-console.time('query 50000 closest');
-select(cities.slice(), 50000, 0, n - 1, compare);
-console.timeEnd('query 50000 closest');
-
-console.time(`query all ${n}`);
-cities.slice().sort(compare);
-console.timeEnd(`query all ${n}`);
+console.time(`query (sort) all ${n}`);
+var items = cities.map((city) => ({p: city, dist: dist(city, p)}));
+items.sort(compareDist);
+console.timeEnd(`query (sort) all ${n}`);
 
 console.time(`${k} random queries of 1 closest`);
 for (i = 0; i < k; i++) findClosest(randomPoints[i]);
