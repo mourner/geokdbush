@@ -36,10 +36,13 @@ function around(index, lng, lat, maxResults, maxDistance, predicate) {
         if (right - left <= index.nodeSize) {
             // add all points in a leaf node to the queue
             for (var i = left; i <= right; i++) {
-                q.push({
-                    item: index.points[index.ids[i]],
-                    dist: harvesineDist(lng, lat, index.coords[2 * i], index.coords[2 * i + 1])
-                });
+                var item = index.points[index.ids[i]];
+                if (!predicate || predicate(item)) {
+                    q.push({
+                        item: item,
+                        dist: harvesineDist(lng, lat, index.coords[2 * i], index.coords[2 * i + 1])
+                    });
+                }
             }
 
         } else {
@@ -49,10 +52,13 @@ function around(index, lng, lat, maxResults, maxDistance, predicate) {
             var midLat = index.coords[2 * m + 1];
 
             // add middle point to the queue
-            q.push({
-                item: index.points[index.ids[m]],
-                dist: harvesineDist(lng, lat, midLng, midLat)
-            });
+            item = index.points[index.ids[m]];
+            if (!predicate || predicate(item)) {
+                q.push({
+                    item: item,
+                    dist: harvesineDist(lng, lat, midLng, midLat)
+                });
+            }
 
             var nextAxis = (axis + 1) % 2;
 
@@ -87,7 +93,7 @@ function around(index, lng, lat, maxResults, maxDistance, predicate) {
         while (q.length && q.peek().item) {
             var candidate = q.pop();
             if (candidate.dist > maxDistance) return result;
-            if (!predicate || predicate(candidate.item)) result.push(candidate.item);
+            result.push(candidate.item);
             if (result.length === maxResults) return result;
         }
 
