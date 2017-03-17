@@ -40,7 +40,7 @@ function around(index, lng, lat, maxResults, maxDistance, predicate) {
                 if (!predicate || predicate(item)) {
                     q.push({
                         item: item,
-                        dist: harvesineDist(lng, lat, index.coords[2 * i], index.coords[2 * i + 1])
+                        dist: harvesineDist(lng, lat, index.coords[2 * i], index.coords[2 * i + 1], cosLat)
                     });
                 }
             }
@@ -56,7 +56,7 @@ function around(index, lng, lat, maxResults, maxDistance, predicate) {
             if (!predicate || predicate(item)) {
                 q.push({
                     item: item,
-                    dist: harvesineDist(lng, lat, midLng, midLat)
+                    dist: harvesineDist(lng, lat, midLng, midLat, cosLat)
                 });
             }
 
@@ -128,7 +128,7 @@ function compareDist(a, b) {
     return a.dist - b.dist;
 }
 
-function harvesineDist(lng1, lat1, lng2, lat2) {
+function harvesineDist(lng1, lat1, lng2, lat2, cosLat1) {
     var d = Math.sin(lat1 * rad) * Math.sin(lat2 * rad) +
             Math.cos(lat1 * rad) * Math.cos(lat2 * rad) * Math.cos((lng2 - lng1) * rad);
     return earthRadius * Math.acos(Math.min(d, 1));
