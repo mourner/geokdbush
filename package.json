@@ -1,0 +1,22 @@
+{
+  "name": "geokdbush",
+  "version": "1.0.0",
+  "main": "index.js",
+  "author": "Vladimir Agafonkin <agafonkin@gmail.com>",
+  "license": "ISC",
+  "dependencies": {
+    "tinyqueue": "^1.2.2"
+  },
+  "devDependencies": {
+    "all-the-cities": "2.0.0",
+    "eslint": "^3.17.1",
+    "eslint-config-mourner": "^2.0.1",
+    "kdbush": "^1.0.1"
+  },
+  "eslintConfig": {
+    "extends": "mourner"
+  },
+  "scripts": {
+    "test": "eslint index.js bench.js"
+  }
+}
