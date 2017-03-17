@@ -5,7 +5,7 @@ the fastest static spatial index for points in JavaScript.
 
 It implements fast [nearest neighbors](https://en.wikipedia.org/wiki/Nearest_neighbor_search) queries
 for locations on Earth, taking Earth curvature and date line wrapping into account.
-Similar to [sphere-knn](https://github.com/darkskyapp/sphere-knn), but orders of magnitude faster.
+Inspired by [sphere-knn](https://github.com/darkskyapp/sphere-knn), but uses a different algorithm.
 
 ### Example
 
