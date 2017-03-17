@@ -5,6 +5,8 @@ var tinyqueue = require('tinyqueue');
 exports.around = around;
 
 var earthRadius = 6371;
+var earthCircumference = 40007;
+
 var rad = Math.PI / 180;
 
 function around(index, lng, lat, maxResults, maxDistance, predicate) {
@@ -115,8 +117,8 @@ function around(index, lng, lat, maxResults, maxDistance, predicate) {
 
 // lower bound for distance from a location to points inside a bounding box
 function boxDist(lng, lat, node, cosLat) {
-    var dx = earthRadius * spanDist(lng, node.minLng, node.maxLng, 360) * cosLat;
-    var dy = earthRadius * spanDist(lat, node.minLat, node.maxLat, 180);
+    var dx = 0.7 * (earthCircumference / 360) * spanDist(lng, node.minLng, node.maxLng, 360) * cosLat;
+    var dy = 0.7 * (earthCircumference / 360) * spanDist(lat, node.minLat, node.maxLat, 180);
     // we use Chebyshev's distance metric, which is fast and good enough
     return Math.max(dx, dy);
 }
