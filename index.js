@@ -15,26 +15,28 @@ function around(index, lng, lat, maxResults, maxDistance, predicate) {
 
     var cosLat = Math.cos(lat * rad);
 
+    // a distance-sorted priority queue that will contain both points and kd-tree nodes
+    var q = tinyqueue(null, compareDist);
+
+    // an object that represents the top kd-tree node (the whole Earth)
     var node = {
-        left: 0,
-        right: index.ids.length - 1,
-        axis: 0,
-        dist: Infinity,
-        minLng: -180,
+        left: 0, // left index in the kd-tree array
+        right: index.ids.length - 1, // right index
+        axis: 0, // 0 for longitude axis and 1 for latitude axis
+        dist: 0, // will hold the lower bound of children's distances to the query point
+        minLng: -180, // bounding box of the node
         minLat: -90,
         maxLng: 180,
         maxLat: 90
     };
 
-    var q = tinyqueue(null, compareDist);
-
     while (node) {
-        var axis = node.axis;
         var right = node.right;
         var left = node.left;
 
-        if (right - left <= index.nodeSize) {
-            // add all points in a leaf node to the queue
+        if (right - left <= index.nodeSize) { // leaf node
+
+            // add all points of the leaf node to the queue
             for (var i = left; i <= right; i++) {
                 var item = index.points[index.ids[i]];
                 if (!predicate || predicate(item)) {
@@ -45,8 +47,9 @@ function around(index, lng, lat, maxResults, maxDistance, predicate) {
                 }
             }
 
-        } else {
-            var m = (left + right) >> 1;
+        } else { // not a leaf node (has child nodes)
+
+            var m = (left + right) >> 1; // middle index
 
             var midLng = index.coords[2 * m];
             var midLat = index.coords[2 * m + 1];
@@ -60,24 +63,26 @@ function around(index, lng, lat, maxResults, maxDistance, predicate) {
                 });
             }
 
-            var nextAxis = (axis + 1) % 2;
+            var nextAxis = (node.axis + 1) % 2;
 
+            // first half of the node
             var leftNode = {
                 left: left,
                 right: m - 1,
                 axis: nextAxis,
                 minLng: node.minLng,
                 minLat: node.minLat,
-                maxLng: axis === 0 ? midLng : node.maxLng,
-                maxLat: axis === 1 ? midLat : node.maxLat,
+                maxLng: node.axis === 0 ? midLng : node.maxLng,
+                maxLat: node.axis === 1 ? midLat : node.maxLat,
                 dist: 0
             };
+            // second half of the node
             var rightNode = {
                 left: m + 1,
                 right: right,
                 axis: nextAxis,
-                minLng: axis === 0 ? midLng : node.minLng,
-                minLat: axis === 1 ? midLat : node.minLat,
+                minLng: node.axis === 0 ? midLng : node.minLng,
+                minLat: node.axis === 1 ? midLat : node.minLat,
                 maxLng: node.maxLng,
                 maxLat: node.maxLat,
                 dist: 0
@@ -86,10 +91,14 @@ function around(index, lng, lat, maxResults, maxDistance, predicate) {
             leftNode.dist = boxDist(lng, lat, leftNode, cosLat);
             rightNode.dist = boxDist(lng, lat, rightNode, cosLat);
 
+            // add child nodes to the queue
             q.push(leftNode);
             q.push(rightNode);
         }
 
+        // fetch closest points from the queue; they're guaranteed to be closer
+        // than all remaining points (both individual and those in kd-tree nodes),
+        // since each node's distance is a lower bound of distances to its children
         while (q.length && q.peek().item) {
             var candidate = q.pop();
             if (candidate.dist > maxDistance) return result;
@@ -97,16 +106,18 @@ function around(index, lng, lat, maxResults, maxDistance, predicate) {
             if (result.length === maxResults) return result;
         }
 
+        // the next closest kd-tree node
         node = q.pop();
     }
 
     return result;
 }
 
-// Manhattan-like distance measure from a location to a bounding box
+// lower bound for distance from a location to points inside a bounding box
 function boxDist(lng, lat, node, cosLat) {
     var dx = earthRadius * spanDist(lng, node.minLng, node.maxLng, 360) * cosLat;
     var dy = earthRadius * spanDist(lat, node.minLat, node.maxLat, 180);
+    // we use Chebyshev's distance metric, which is fast and good enough
     return Math.max(dx, dy);
 }
 
@@ -130,6 +141,6 @@ function compareDist(a, b) {
 
 function harvesineDist(lng1, lat1, lng2, lat2, cosLat1) {
     var d = Math.sin(lat1 * rad) * Math.sin(lat2 * rad) +
-            Math.cos(lat1 * rad) * Math.cos(lat2 * rad) * Math.cos((lng2 - lng1) * rad);
+            cosLat1 * Math.cos(lat2 * rad) * Math.cos((lng2 - lng1) * rad);
     return earthRadius * Math.acos(Math.min(d, 1));
 }
