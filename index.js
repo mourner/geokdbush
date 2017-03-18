@@ -132,9 +132,9 @@ function boxDist(lng, lat, node, cosLat, sinLat) {
 
     // query point is west or east of the bounding box;
     // calculate the extremum for great circle distance from query point to the closest longitude
-    var lng2 = (minLng - lng + 360) % 360 <= (lng - maxLng + 360) % 360 ? minLng : maxLng;
-    var cosLngDelta = Math.cos((lng2 - lng) * rad);
-    var lat2 = Math.atan(sinLat / (cosLat * cosLngDelta)) / rad;
+    var closestLng = (minLng - lng + 360) % 360 <= (lng - maxLng + 360) % 360 ? minLng : maxLng;
+    var cosLngDelta = Math.cos((closestLng - lng) * rad);
+    var extremumLat = Math.atan(sinLat / (cosLat * cosLngDelta)) / rad;
 
     // calculate distances to lower and higher bbox corners and extremum (if it's within this range);
     // one of the three distances will be the lower bound of great circle distance to bbox
@@ -142,8 +142,8 @@ function boxDist(lng, lat, node, cosLat, sinLat) {
         greatCircleDistPart(minLat, cosLat, sinLat, cosLngDelta),
         greatCircleDistPart(maxLat, cosLat, sinLat, cosLngDelta));
 
-    if (lat2 > minLat && lat2 < maxLat) {
-        d = Math.max(d, greatCircleDistPart(lat2, cosLat, sinLat, cosLngDelta));
+    if (extremumLat > minLat && extremumLat < maxLat) {
+        d = Math.max(d, greatCircleDistPart(extremumLat, cosLat, sinLat, cosLngDelta));
     }
 
     return earthRadius * Math.acos(d);
