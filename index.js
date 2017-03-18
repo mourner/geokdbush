@@ -132,17 +132,21 @@ function boxDist(lng, lat, node, cosLat, sinLat) {
 
     // query point is west or east of the bounding box;
     // calculate the extremum for great circle distance from query point to the closest longitude
-    var lng2 = ((minLng - lng) + 360) % 360 <= ((lng - maxLng) + 360) % 360 ? minLng : maxLng;
-    var cosDLng = Math.cos((lng2 - lng) * rad);
-    var lat2 = Math.atan(1 / (cosLat * cosDLng / sinLat)) / rad;
+    var lng2 = (minLng - lng + 360) % 360 <= (lng - maxLng + 360) % 360 ? minLng : maxLng;
+    var cosLngDelta = Math.cos((lng2 - lng) * rad);
+    var lat2 = Math.atan(sinLat / (cosLat * cosLngDelta)) / rad;
 
     // calculate distances to lower and higher bbox corners and extremum (if it's within this range);
     // one of the three distances will be the lower bound of great circle distance to bbox
-    var d1 = greatCircleDistPart(minLat, cosLat, sinLat, cosDLng);
-    var d2 = greatCircleDistPart(maxLat, cosLat, sinLat, cosDLng);
-    var d3 = lat2 > minLat && lat2 < maxLat ? greatCircleDistPart(lat2, cosLat, sinLat, cosDLng) : -1;
+    var d = Math.max(
+        greatCircleDistPart(minLat, cosLat, sinLat, cosLngDelta),
+        greatCircleDistPart(maxLat, cosLat, sinLat, cosLngDelta));
 
-    return earthRadius * Math.acos(Math.max(d1, d2, d3));
+    if (lat2 > minLat && lat2 < maxLat) {
+        d = Math.max(d, greatCircleDistPart(lat2, cosLat, sinLat, cosLngDelta));
+    }
+
+    return earthRadius * Math.acos(d);
 }
 
 function compareDist(a, b) {
@@ -151,13 +155,13 @@ function compareDist(a, b) {
 
 // distance using spherical law of cosines; should be precise enough for our needs
 function greatCircleDist(lng, lat, lng2, lat2, cosLat, sinLat) {
-    var d = greatCircleDistPart(lat2, cosLat, sinLat, Math.cos((lng2 - lng) * rad));
-    return earthRadius * Math.acos(d);
+    var cosLngDelta = Math.cos((lng2 - lng) * rad);
+    return earthRadius * Math.acos(greatCircleDistPart(lat2, cosLat, sinLat, cosLngDelta));
 }
 
 // partial greatCircleDist to reduce trigonometric calculations
-function greatCircleDistPart(lat, cosLat, sinLat, cosDLng) {
+function greatCircleDistPart(lat, cosLat, sinLat, cosLngDelta) {
     var d = sinLat * Math.sin(lat * rad) +
-            cosLat * Math.cos(lat * rad) * cosDLng;
+            cosLat * Math.cos(lat * rad) * cosLngDelta;
     return Math.min(d, 1);
 }
