@@ -34,19 +34,21 @@ test('performs search using filter function', function (t) {
 });
 
 test('performs exhaustive search in correct order', function (t) {
-    var points = geokdbush.around(index, 30.5, 50.5, Infinity, Infinity, p => p.population > 100000);
+    var points = geokdbush.around(index, 30.5, 50.5);
 
     var c = {lon: 30.5, lat: 50.5};
     var sorted = cities
-        .filter((p) => p.population > 100000)
         .map((item) => ({item: item, dist: greatCircleDist(c, item)}))
         .sort((a, b) => a.dist - b.dist);
 
     for (var i = 0; i < sorted.length; i++) {
-        t.equal(
-            sorted[i].item.name + ' ' + sorted[i].dist,
-            points[i].name + ' ' + greatCircleDist(points[i], c));
+        var dist = greatCircleDist(points[i], c);
+        if (dist !== sorted[i].dist) {
+            t.fail(points[i].name + ' vs ' + sorted[i].item.name);
+            break;
+        }
     }
+    t.pass('all points in correct order');
 
     t.end();
 });

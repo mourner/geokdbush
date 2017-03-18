@@ -16,6 +16,7 @@ function around(index, lng, lat, maxResults, maxDistance, predicate) {
     if (maxDistance === undefined) maxDistance = Infinity;
 
     var cosLat = Math.cos(lat * rad);
+    var sinLat = Math.sin(lat * rad);
 
     // a distance-sorted priority queue that will contain both points and kd-tree nodes
     var q = tinyqueue(null, compareDist);
@@ -44,7 +45,7 @@ function around(index, lng, lat, maxResults, maxDistance, predicate) {
                 if (!predicate || predicate(item)) {
                     q.push({
                         item: item,
-                        dist: greatCircleDist(lng, lat, index.coords[2 * i], index.coords[2 * i + 1], cosLat)
+                        dist: greatCircleDist(lng, lat, index.coords[2 * i], index.coords[2 * i + 1], cosLat, sinLat)
                     });
                 }
             }
@@ -61,7 +62,7 @@ function around(index, lng, lat, maxResults, maxDistance, predicate) {
             if (!predicate || predicate(item)) {
                 q.push({
                     item: item,
-                    dist: greatCircleDist(lng, lat, midLng, midLat, cosLat)
+                    dist: greatCircleDist(lng, lat, midLng, midLat, cosLat, sinLat)
                 });
             }
 
@@ -90,8 +91,8 @@ function around(index, lng, lat, maxResults, maxDistance, predicate) {
                 dist: 0
             };
 
-            leftNode.dist = boxDist(lng, lat, leftNode, cosLat);
-            rightNode.dist = boxDist(lng, lat, rightNode, cosLat);
+            leftNode.dist = boxDist(lng, lat, leftNode, cosLat, sinLat);
+            rightNode.dist = boxDist(lng, lat, rightNode, cosLat, sinLat);
 
             // add child nodes to the queue
             q.push(leftNode);
@@ -116,25 +117,32 @@ function around(index, lng, lat, maxResults, maxDistance, predicate) {
 }
 
 // lower bound for distance from a location to points inside a bounding box
-function boxDist(lng, lat, node, cosLat) {
-    var dx = 0.7 * (earthCircumference / 360) * spanDist(lng, node.minLng, node.maxLng, 360) * cosLat;
-    var dy = 0.7 * (earthCircumference / 360) * spanDist(lat, node.minLat, node.maxLat, 180);
-    // we use Chebyshev's distance metric, which is fast and good enough
-    return Math.max(dx, dy);
-}
+function boxDist(lng, lat, node, cosLat, sinLat) {
+    var minLng = node.minLng;
+    var maxLng = node.maxLng;
+    var minLat = node.minLat;
+    var maxLat = node.maxLat;
 
-function spanDist(k, min, max, span) {
-    if (k >= min && k <= max) return 0;
-    return Math.min(
-        axisDist(k, min, span),
-        axisDist(k, max, span));
-}
+    // query point is between minimum and maximum longitudes
+    if (lng >= minLng && lng <= maxLng) {
+        if (lat <= minLat) return earthCircumference * (minLat - lat) / 360; // south
+        if (lat >= maxLat) return earthCircumference * (lat - maxLat) / 360; // north
+        return 0; // inside the bbox
+    }
 
-function axisDist(a, b, span) {
-    return Math.min(
-        Math.abs(a - b),
-        Math.abs(a - b + span),
-        Math.abs(a - b - span));
+    // query point is west or east of the bounding box;
+    // calculate the extremum for great circle distance from query point to the closest longitude
+    var lng2 = ((minLng - lng) + 360) % 360 <= ((lng - maxLng) + 360) % 360 ? minLng : maxLng;
+    var cosDLng = Math.cos((lng2 - lng) * rad);
+    var lat2 = Math.atan(1 / (cosLat * cosDLng / sinLat)) / rad;
+
+    // calculate distances to lower and higher bbox corners and extremum (if it's within this range);
+    // one of the three distances will be the lower bound of great circle distance to bbox
+    var d1 = greatCircleDistPart(minLat, cosLat, sinLat, cosDLng);
+    var d2 = greatCircleDistPart(maxLat, cosLat, sinLat, cosDLng);
+    var d3 = lat2 > minLat && lat2 < maxLat ? greatCircleDistPart(lat2, cosLat, sinLat, cosDLng) : -1;
+
+    return earthRadius * Math.acos(Math.max(d1, d2, d3));
 }
 
 function compareDist(a, b) {
@@ -142,8 +150,14 @@ function compareDist(a, b) {
 }
 
 // distance using spherical law of cosines; should be precise enough for our needs
-function greatCircleDist(lng1, lat1, lng2, lat2, cosLat1) {
-    var d = Math.sin(lat1 * rad) * Math.sin(lat2 * rad) +
-            cosLat1 * Math.cos(lat2 * rad) * Math.cos((lng2 - lng1) * rad);
-    return earthRadius * Math.acos(Math.min(d, 1));
+function greatCircleDist(lng, lat, lng2, lat2, cosLat, sinLat) {
+    var d = greatCircleDistPart(lat2, cosLat, sinLat, Math.cos((lng2 - lng) * rad));
+    return earthRadius * Math.acos(d);
+}
+
+// partial greatCircleDist to reduce trigonometric calculations
+function greatCircleDistPart(lat, cosLat, sinLat, cosDLng) {
+    var d = sinLat * Math.sin(lat * rad) +
+            cosLat * Math.cos(lat * rad) * cosDLng;
+    return Math.min(d, 1);
 }

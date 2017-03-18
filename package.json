@@ -19,7 +19,7 @@
     "extends": "mourner"
   },
   "scripts": {
-    "pretest": "eslint *.js bench",
+    "pretest": "eslint index.js test.js bench",
     "test": "tape test.js",
     "bench": "cd bench && node bench-geokdbush && node bench-sphere-knn && node bench-naive"
   }
