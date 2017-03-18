@@ -1,4 +1,4 @@
-## geokdbush
+## geokdbush [![Build Status](https://travis-ci.org/mourner/geokdbush.svg?branch=master)](https://travis-ci.org/mourner/geokdbush)
 
 A geographic extension for [kdbush](https://github.com/mourner/kdbush),
 the fastest static spatial index for points in JavaScript.
