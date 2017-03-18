@@ -39,8 +39,8 @@ The results below were obtained with `npm run bench`
 
 benchmark | geokdbush | sphere-knn | naive
 --- | ---: | ---: | ---:
-index 138398 points | 69ms | 1027ms | n/a
-query 1000 closest | 4ms | 5ms | 155ms
-query 50000 closest | 31ms | 391ms | 155ms
-query all 138398 | 80ms | 29.9s | 155ms
-1000 queries of 1 | 123ms | 169ms | 18.4s
+index 138398 points | 69ms | 967ms | n/a
+query 1000 closest | 4ms | 4ms | 155ms
+query 50000 closest | 31ms | 368ms | 155ms
+query all 138398 | 80ms | 29.7s | 155ms
+1000 queries of 1 | 55ms | 165ms | 18.4s

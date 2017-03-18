@@ -11,7 +11,7 @@ var k = 1000;
 var randomPoints = [];
 for (var i = 0; i < k; i++) randomPoints.push({
     lon: -180 + 360 * Math.random(),
-    lat: -90 + 180 * Math.random()
+    lat: -60 + 140 * Math.random()
 });
 
 console.time(`index ${cities.length} points`);
