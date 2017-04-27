@@ -38,11 +38,11 @@ test('performs exhaustive search in correct order', function (t) {
 
     var c = {lon: 30.5, lat: 50.5};
     var sorted = cities
-        .map((item) => ({item: item, dist: greatCircleDist(c, item)}))
+        .map((item) => ({item: item, dist: geokdbush.distance(c.lon, c.lat, item.lon, item.lat)}))
         .sort((a, b) => a.dist - b.dist);
 
     for (var i = 0; i < sorted.length; i++) {
-        var dist = greatCircleDist(points[i], c);
+        var dist = geokdbush.distance(points[i].lon, points[i].lat, c.lon, c.lat);
         if (dist !== sorted[i].dist) {
             t.fail(points[i].name + ' vs ' + sorted[i].item.name);
             break;
@@ -53,10 +53,7 @@ test('performs exhaustive search in correct order', function (t) {
     t.end();
 });
 
-var rad = Math.PI / 180;
-
-function greatCircleDist(a, b) {
-    var d = Math.sin(a.lat * rad) * Math.sin(b.lat * rad) +
-            Math.cos(a.lat * rad) * Math.cos(b.lat * rad) * Math.cos((a.lon - b.lon) * rad);
-    return 6371 * Math.acos(Math.min(d, 1));
-}
+test('calculates great circle distance', function (t) {
+    t.equal(10131.7396, Math.round(1e4 * geokdbush.distance(30.5, 50.5, -119.7, 34.4)) / 1e4);
+    t.end();
+});

@@ -3,6 +3,7 @@
 var tinyqueue = require('tinyqueue');
 
 exports.around = around;
+exports.distance = distance;
 
 var earthRadius = 6371;
 var earthCircumference = 40007;
@@ -164,4 +165,8 @@ function greatCircleDistPart(lat, cosLat, sinLat, cosLngDelta) {
     var d = sinLat * Math.sin(lat * rad) +
             cosLat * Math.cos(lat * rad) * cosLngDelta;
     return Math.min(d, 1);
+}
+
+function distance(lng, lat, lng2, lat2) {
+    return greatCircleDist(lng, lat, lng2, lat2, Math.cos(lat * rad), Math.sin(lat * rad));
 }

@@ -31,6 +31,10 @@ Returns an array of the closest points from a given location in order of increas
 - `maxDistance`: (optional) maximum distance to search within (`Infinity` by default).
 - `filterFn`: (optional) a function to filter the results with.
 
+#### geokdbush.distance(longitude1, latitude1, longitude2, latitude2)
+
+Returns great circle distance between two locations in kilometers.
+
 ### Performance
 
 This library is incredibly fast.
