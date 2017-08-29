@@ -1,7 +1,7 @@
 'use strict';
 
 var cities = require('all-the-cities');
-var VPTreeFactory = require('./vptree.js');
+var VPTreeFactory = require('vptree');
 
 
 var earthRadius = 6371;
