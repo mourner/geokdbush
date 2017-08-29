@@ -21,6 +21,6 @@
   "scripts": {
     "pretest": "eslint index.js test.js bench",
     "test": "tape test.js",
-    "bench": "cd bench && node bench-geokdbush && node bench-sphere-knn && node bench-naive"
+    "bench": "cd bench && node bench-geokdbush && node bench-sphere-knn && node bench-naive && node bench-vptree"
   }
 }
