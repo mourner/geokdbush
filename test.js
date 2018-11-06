@@ -42,7 +42,7 @@ test('performs exhaustive search in correct order', function (t) {
         .sort((a, b) => a.dist - b.dist);
 
     for (var i = 0; i < sorted.length; i++) {
-        var dist = geokdbush.distance(points[i].lon, points[i].lat, c.lon, c.lat);
+        var dist = geokdbush.distance(c.lon, c.lat, points[i].lon, points[i].lat);
         if (dist !== sorted[i].dist) {
             t.fail(points[i].name + ' vs ' + sorted[i].item.name);
             break;
