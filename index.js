@@ -12,7 +12,7 @@ function around(index, lng, lat, maxResults, maxDistance, predicate) {
     var maxHaverSinDist = 1, result = [];
 
     if (maxResults === undefined) maxResults = Infinity;
-    if (maxDistance !== undefined) maxHaverSinDist = haverSin(maxDistance/earthRadius);
+    if (maxDistance !== undefined) maxHaverSinDist = haverSin(maxDistance / earthRadius);
 
     // a distance-sorted priority queue that will contain both points and kd-tree nodes
     var q = tinyqueue(null, compareDist);
@@ -123,7 +123,7 @@ function boxDist(lng, lat, node) {
 
     // query point is between minimum and maximum longitudes
     if (lng >= minLng && lng <= maxLng) {
-        var dLat = (lat < minLat)?(lat - minLat):((lat > maxLat)?(lat - maxLat):0);
+        var dLat = (lat < minLat) ? (lat - minLat) : ((lat > maxLat) ? (lat - maxLat) : 0);
         return haverSin(dLat * rad);
     }
 
@@ -159,15 +159,15 @@ function haverSinDist(haverSinDLng, lat1, lat2) {
 function greatCircleDist(lng1, lat1, lng2, lat2) {
     var haverSinDLng = haverSin((lng1 - lng2) * rad);
     var hsdist = haverSinDist(haverSinDLng, lat1, lat2);
-    return 2*earthRadius*Math.asin(Math.sqrt(hsdist));
+    return 2 * earthRadius * Math.asin(Math.sqrt(hsdist));
 }
 
-function distance(lng, lat, lng2, lat2) {
+function distance(lng1, lat1, lng2, lat2) {
     return greatCircleDist(lng1, lat1, lng2, lat2);
 }
 
 function vertexLat(lat, haverSinDLng) {
     var cosDLng = 1 - 2 * haverSinDLng;
-    if (cosDLng <= 0) return (lat>0?90:-90);
+    if (cosDLng <= 0) return (lat > 0 ? 90 : -90);
     return Math.atan(Math.tan(lat * rad) / cosDLng) / rad;
 }
