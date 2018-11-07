@@ -152,8 +152,8 @@ function haverSin(theta) {
 }
 
 function haverSinDist(haverSinDLng, lat1, lat2) {
-    var haverSinDLat = haverSin((lat1 - lat2) * rad);
-    return haverSinDLng * Math.cos(lat1 * rad) * Math.cos(lat2 * rad) + haverSinDLat;
+    var haverSinX = Math.cos(lat1 * rad) * Math.cos(lat2 * rad) * haverSinDLng;
+    return haverSinX + haverSin((lat1 - lat2) * rad);
 }
 
 function greatCircleDist(lng1, lat1, lng2, lat2) {
