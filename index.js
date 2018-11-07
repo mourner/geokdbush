@@ -29,6 +29,8 @@ function around(index, lng, lat, maxResults, maxDistance, predicate) {
         maxLat: 90
     };
 
+    var cosLat = Math.cos(lat * rad);
+
     while (node) {
         var right = node.right;
         var left = node.left;
@@ -41,7 +43,7 @@ function around(index, lng, lat, maxResults, maxDistance, predicate) {
                 if (!predicate || predicate(item)) {
                     q.push({
                         item: item,
-                        dist: haverSinDist(lng, lat, index.coords[2 * i], index.coords[2 * i + 1])
+                        dist: haverSinDist(lng, lat, index.coords[2 * i], index.coords[2 * i + 1], cosLat)
                     });
                 }
             }
@@ -57,7 +59,7 @@ function around(index, lng, lat, maxResults, maxDistance, predicate) {
             if (!predicate || predicate(item)) {
                 q.push({
                     item: item,
-                    dist: haverSinDist(lng, lat, midLng, midLat)
+                    dist: haverSinDist(lng, lat, midLng, midLat, cosLat)
                 });
             }
 
@@ -86,8 +88,8 @@ function around(index, lng, lat, maxResults, maxDistance, predicate) {
                 dist: 0
             };
 
-            leftNode.dist = boxDist(lng, lat, leftNode);
-            rightNode.dist = boxDist(lng, lat, rightNode);
+            leftNode.dist = boxDist(lng, lat, cosLat, leftNode);
+            rightNode.dist = boxDist(lng, lat, cosLat, rightNode);
 
             // add child nodes to the queue
             q.push(leftNode);
@@ -112,7 +114,7 @@ function around(index, lng, lat, maxResults, maxDistance, predicate) {
 }
 
 // lower bound for distance from a location to points inside a bounding box
-function boxDist(lng, lat, node) {
+function boxDist(lng, lat, cosLat, node) {
     var minLng = node.minLng;
     var maxLng = node.maxLng;
     var minLat = node.minLat;
@@ -132,12 +134,12 @@ function boxDist(lng, lat, node) {
 
     // if extremum is inside the box, return the distance to it
     if (extremumLat > minLat && extremumLat < maxLat) {
-        return haverSinDistPartial(haverSinDLng, lat, extremumLat);
+        return haverSinDistPartial(haverSinDLng, cosLat, lat, extremumLat);
     }
     // otherwise return the distan e to one of the bbox corners (whichever is closest)
     return Math.min(
-        haverSinDistPartial(haverSinDLng, lat, minLat),
-        haverSinDistPartial(haverSinDLng, lat, maxLat)
+        haverSinDistPartial(haverSinDLng, cosLat, lat, minLat),
+        haverSinDistPartial(haverSinDLng, cosLat, lat, maxLat)
     );
 }
 
@@ -150,17 +152,18 @@ function haverSin(theta) {
     return s * s;
 }
 
-function haverSinDistPartial(haverSinDLng, lat1, lat2) {
-    return Math.cos(lat1 * rad) * Math.cos(lat2 * rad) * haverSinDLng + haverSin((lat1 - lat2) * rad);
+function haverSinDistPartial(haverSinDLng, cosLat1, lat1, lat2) {
+    return cosLat1 * Math.cos(lat2 * rad) * haverSinDLng + haverSin((lat1 - lat2) * rad);
 }
 
-function haverSinDist(lng1, lat1, lng2, lat2) {
+function haverSinDist(lng1, lat1, lng2, lat2, cosLat1) {
     var haverSinDLng = haverSin((lng1 - lng2) * rad);
-    return haverSinDistPartial(haverSinDLng, lat1, lat2);
+    return haverSinDistPartial(haverSinDLng, cosLat1, lat1, lat2);
 }
 
 function distance(lng1, lat1, lng2, lat2) {
-    return 2 * earthRadius * Math.asin(Math.sqrt(haverSinDist(lng1, lat1, lng2, lat2)));
+    var h = haverSinDist(lng1, lat1, lng2, lat2, Math.cos(lat1 * rad));
+    return 2 * earthRadius * Math.asin(Math.sqrt(h));
 }
 
 function vertexLat(lat, haverSinDLng) {
