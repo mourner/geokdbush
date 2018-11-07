@@ -123,19 +123,21 @@ function boxDist(lng, lat, node) {
 
     // query point is between minimum and maximum longitudes
     if (lng >= minLng && lng <= maxLng) {
-        var dLat = (lat < minLat) ? (lat - minLat) : ((lat > maxLat) ? (lat - maxLat) : 0);
-        return haverSin(dLat * rad);
+        if (lat < minLat) return haverSin((lat - minLat) * rad);
+        if (lat > maxLat) return haverSin((lat - maxLat) * rad);
+        return 0;
     }
 
     // query point is west or east of the bounding box;
-    // calculate the extremum for great circle distance from query point to the closest longitude
-    // calculate distances to lower and higher bbox corners and extremum (if it's within this range);
-    // one of the three distances will be the lower bound of great circle distance to bbox
+    // calculate the extremum for great circle distance from query point to the closest longitude;
     var haverSinDLng = Math.min(haverSin((lng - minLng) * rad), haverSin((lng - maxLng) * rad));
     var extremumLat = vertexLat(lat, haverSinDLng);
+
+    // if extremum is inside the box, return the distance to it
     if (extremumLat > minLat && extremumLat < maxLat) {
         return haverSinDist(haverSinDLng, lat, extremumLat);
     }
+    // otherwise return the distan e to one of the bbox corners (whichever is closest)
     return Math.min(
         haverSinDist(haverSinDLng, lat, minLat),
         haverSinDist(haverSinDLng, lat, maxLat)
@@ -152,22 +154,17 @@ function haverSin(theta) {
 }
 
 function haverSinDist(haverSinDLng, lat1, lat2) {
-    var haverSinX = Math.cos(lat1 * rad) * Math.cos(lat2 * rad) * haverSinDLng;
-    return haverSinX + haverSin((lat1 - lat2) * rad);
+    return Math.cos(lat1 * rad) * Math.cos(lat2 * rad) * haverSinDLng + haverSin((lat1 - lat2) * rad);
 }
 
-function greatCircleDist(lng1, lat1, lng2, lat2) {
+function distance(lng1, lat1, lng2, lat2) {
     var haverSinDLng = haverSin((lng1 - lng2) * rad);
     var hsdist = haverSinDist(haverSinDLng, lat1, lat2);
     return 2 * earthRadius * Math.asin(Math.sqrt(hsdist));
 }
 
-function distance(lng1, lat1, lng2, lat2) {
-    return greatCircleDist(lng1, lat1, lng2, lat2);
-}
-
 function vertexLat(lat, haverSinDLng) {
     var cosDLng = 1 - 2 * haverSinDLng;
-    if (cosDLng <= 0) return (lat > 0 ? 90 : -90);
+    if (cosDLng <= 0) return lat > 0 ? 90 : -90;
     return Math.atan(Math.tan(lat * rad) / cosDLng) / rad;
 }
