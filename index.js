@@ -6,18 +6,13 @@ exports.around = around;
 exports.distance = distance;
 
 var earthRadius = 6371;
-var earthCircumference = 40007;
-
 var rad = Math.PI / 180;
 
 function around(index, lng, lat, maxResults, maxDistance, predicate) {
-    var result = [];
+    var maxHaverSinDist = 1, result = [];
 
     if (maxResults === undefined) maxResults = Infinity;
-    if (maxDistance === undefined) maxDistance = Infinity;
-
-    var cosLat = Math.cos(lat * rad);
-    var sinLat = Math.sin(lat * rad);
+    if (maxDistance !== undefined) maxHaverSinDist = haverSin(maxDistance / earthRadius);
 
     // a distance-sorted priority queue that will contain both points and kd-tree nodes
     var q = tinyqueue(null, compareDist);
@@ -35,6 +30,7 @@ function around(index, lng, lat, maxResults, maxDistance, predicate) {
     };
 
     while (node) {
+        var item, haverSinDLng;
         var right = node.right;
         var left = node.left;
 
@@ -42,11 +38,12 @@ function around(index, lng, lat, maxResults, maxDistance, predicate) {
 
             // add all points of the leaf node to the queue
             for (var i = left; i <= right; i++) {
-                var item = index.points[index.ids[i]];
+                item = index.points[index.ids[i]];
                 if (!predicate || predicate(item)) {
+                    haverSinDLng = haverSin((lng - index.coords[2 * i]) * rad);
                     q.push({
                         item: item,
-                        dist: greatCircleDist(lng, lat, index.coords[2 * i], index.coords[2 * i + 1], cosLat, sinLat)
+                        dist: haverSinDist(haverSinDLng, lat, index.coords[2 * i + 1])
                     });
                 }
             }
@@ -54,16 +51,16 @@ function around(index, lng, lat, maxResults, maxDistance, predicate) {
         } else { // not a leaf node (has child nodes)
 
             var m = (left + right) >> 1; // middle index
-
             var midLng = index.coords[2 * m];
             var midLat = index.coords[2 * m + 1];
 
             // add middle point to the queue
             item = index.points[index.ids[m]];
             if (!predicate || predicate(item)) {
+                haverSinDLng = haverSin((lng - midLng) * rad);
                 q.push({
                     item: item,
-                    dist: greatCircleDist(lng, lat, midLng, midLat, cosLat, sinLat)
+                    dist: haverSinDist(haverSinDLng, lat, midLat)
                 });
             }
 
@@ -92,8 +89,8 @@ function around(index, lng, lat, maxResults, maxDistance, predicate) {
                 dist: 0
             };
 
-            leftNode.dist = boxDist(lng, lat, leftNode, cosLat, sinLat);
-            rightNode.dist = boxDist(lng, lat, rightNode, cosLat, sinLat);
+            leftNode.dist = boxDist(lng, lat, leftNode);
+            rightNode.dist = boxDist(lng, lat, rightNode);
 
             // add child nodes to the queue
             q.push(leftNode);
@@ -105,7 +102,7 @@ function around(index, lng, lat, maxResults, maxDistance, predicate) {
         // since each node's distance is a lower bound of distances to its children
         while (q.length && q.peek().item) {
             var candidate = q.pop();
-            if (candidate.dist > maxDistance) return result;
+            if (candidate.dist > maxHaverSinDist) return result;
             result.push(candidate.item);
             if (result.length === maxResults) return result;
         }
@@ -118,7 +115,7 @@ function around(index, lng, lat, maxResults, maxDistance, predicate) {
 }
 
 // lower bound for distance from a location to points inside a bounding box
-function boxDist(lng, lat, node, cosLat, sinLat) {
+function boxDist(lng, lat, node) {
     var minLng = node.minLng;
     var maxLng = node.maxLng;
     var minLat = node.minLat;
@@ -126,47 +123,51 @@ function boxDist(lng, lat, node, cosLat, sinLat) {
 
     // query point is between minimum and maximum longitudes
     if (lng >= minLng && lng <= maxLng) {
-        if (lat <= minLat) return earthCircumference * (minLat - lat) / 360; // south
-        if (lat >= maxLat) return earthCircumference * (lat - maxLat) / 360; // north
-        return 0; // inside the bbox
+        var dLat = (lat < minLat) ? (lat - minLat) : ((lat > maxLat) ? (lat - maxLat) : 0);
+        return haverSin(dLat * rad);
     }
 
     // query point is west or east of the bounding box;
     // calculate the extremum for great circle distance from query point to the closest longitude
-    var closestLng = (minLng - lng + 360) % 360 <= (lng - maxLng + 360) % 360 ? minLng : maxLng;
-    var cosLngDelta = Math.cos((closestLng - lng) * rad);
-    var extremumLat = Math.atan(sinLat / (cosLat * cosLngDelta)) / rad;
-
     // calculate distances to lower and higher bbox corners and extremum (if it's within this range);
     // one of the three distances will be the lower bound of great circle distance to bbox
-    var d = Math.max(
-        greatCircleDistPart(minLat, cosLat, sinLat, cosLngDelta),
-        greatCircleDistPart(maxLat, cosLat, sinLat, cosLngDelta));
-
+    var haverSinDLng = Math.min(haverSin((lng - minLng) * rad), haverSin((lng - maxLng) * rad));
+    var extremumLat = vertexLat(lat, haverSinDLng);
     if (extremumLat > minLat && extremumLat < maxLat) {
-        d = Math.max(d, greatCircleDistPart(extremumLat, cosLat, sinLat, cosLngDelta));
+        return haverSinDist(haverSinDLng, lat, extremumLat);
     }
-
-    return earthRadius * Math.acos(d);
+    return Math.min(
+        haverSinDist(haverSinDLng, lat, minLat),
+        haverSinDist(haverSinDLng, lat, maxLat)
+    );
 }
 
 function compareDist(a, b) {
     return a.dist - b.dist;
 }
 
-// distance using spherical law of cosines; should be precise enough for our needs
-function greatCircleDist(lng, lat, lng2, lat2, cosLat, sinLat) {
-    var cosLngDelta = Math.cos((lng2 - lng) * rad);
-    return earthRadius * Math.acos(greatCircleDistPart(lat2, cosLat, sinLat, cosLngDelta));
+function haverSin(theta) {
+    var s = Math.sin(theta / 2);
+    return s * s;
 }
 
-// partial greatCircleDist to reduce trigonometric calculations
-function greatCircleDistPart(lat, cosLat, sinLat, cosLngDelta) {
-    var d = sinLat * Math.sin(lat * rad) +
-            cosLat * Math.cos(lat * rad) * cosLngDelta;
-    return Math.min(d, 1);
+function haverSinDist(haverSinDLng, lat1, lat2) {
+    var haverSinX = Math.cos(lat1 * rad) * Math.cos(lat2 * rad) * haverSinDLng;
+    return haverSinX + haverSin((lat1 - lat2) * rad);
 }
 
-function distance(lng, lat, lng2, lat2) {
-    return greatCircleDist(lng, lat, lng2, lat2, Math.cos(lat * rad), Math.sin(lat * rad));
+function greatCircleDist(lng1, lat1, lng2, lat2) {
+    var haverSinDLng = haverSin((lng1 - lng2) * rad);
+    var hsdist = haverSinDist(haverSinDLng, lat1, lat2);
+    return 2 * earthRadius * Math.asin(Math.sqrt(hsdist));
+}
+
+function distance(lng1, lat1, lng2, lat2) {
+    return greatCircleDist(lng1, lat1, lng2, lat2);
+}
+
+function vertexLat(lat, haverSinDLng) {
+    var cosDLng = 1 - 2 * haverSinDLng;
+    if (cosDLng <= 0) return (lat > 0 ? 90 : -90);
+    return Math.atan(Math.tan(lat * rad) / cosDLng) / rad;
 }
