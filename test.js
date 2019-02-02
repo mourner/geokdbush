@@ -33,7 +33,7 @@ test('performs search using filter function', function (t) {
     t.end();
 });
 
-test('performs search using filter function', function (t) {
+test('performs search and includes distance', function (t) {
     var points = geokdbush.around(index, 30.5, 50.5, 5, Infinity, undefined, 'distance');
 
     t.same(points.map(p => p.distance).join(', '),
