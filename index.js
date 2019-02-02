@@ -8,7 +8,7 @@ exports.distance = distance;
 var earthRadius = 6371;
 var rad = Math.PI / 180;
 
-function around(index, lng, lat, maxResults, maxDistance, predicate) {
+function around(index, lng, lat, maxResults, maxDistance, predicate, distanceProp) {
     var maxHaverSinDist = 1, result = [];
 
     if (maxResults === undefined) maxResults = Infinity;
@@ -101,6 +101,11 @@ function around(index, lng, lat, maxResults, maxDistance, predicate) {
         // since each node's distance is a lower bound of distances to its children
         while (q.length && q.peek().item) {
             var candidate = q.pop();
+
+            if (distanceProp !== undefined) {
+                candidate.item[distanceProp] = candidate.dist;
+            }
+
             if (candidate.dist > maxHaverSinDist) return result;
             result.push(candidate.item);
             if (result.length === maxResults) return result;

@@ -33,6 +33,15 @@ test('performs search using filter function', function (t) {
     t.end();
 });
 
+test('performs search using filter function', function (t) {
+    var points = geokdbush.around(index, 30.5, 50.5, 5, Infinity, undefined, 'distance');
+
+    t.same(points.map(p => p.distance).join(', '),
+        '1.7402142052643977e-7, 5.503122974536484e-7, 9.055067814447483e-7, 0.000001160261368237789, 0.000001454032818263073');
+
+    t.end();
+});
+
 test('performs exhaustive search in correct order', function (t) {
     var points = geokdbush.around(index, 30.5, 50.5);
 

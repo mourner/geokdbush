@@ -20,7 +20,7 @@ var nearest = geokdbush.around(index, -119.7051, 34.4363, 1000);
 
 ### API
 
-#### geokdbush.around(index, longitude, latitude[, maxResults, maxDistance, filterFn])
+#### geokdbush.around(index, longitude, latitude[, maxResults, maxDistance, filterFn, distanceProp])
 
 Returns an array of the closest points from a given location in order of increasing distance.
 
@@ -30,6 +30,7 @@ Returns an array of the closest points from a given location in order of increas
 - `maxResults`: (optional) maximum number of points to return (`Infinity` by default).
 - `maxDistance`: (optional) maximum distance in kilometers to search within (`Infinity` by default).
 - `filterFn`: (optional) a function to filter the results with.
+- `distanceProp`: (optional) a key to append to each result containing the distance from the query point.
 
 #### geokdbush.distance(longitude1, latitude1, longitude2, latitude2)
 
