@@ -13,7 +13,7 @@ Inspired by [sphere-knn](https://github.com/darkskyapp/sphere-knn), but uses a d
 var kdbush = require('kdbush');
 var geokdbush = require('geokdbush');
 
-var index = kdbush(points, (p) => p.lon, (p) => p.lat);
+var index = new kdbush(points, (p) => p.lon, (p) => p.lat);
 
 var nearest = geokdbush.around(index, -119.7051, 34.4363, 1000);
 ```
