@@ -5,7 +5,7 @@
   "author": "Vladimir Agafonkin <agafonkin@gmail.com>",
   "license": "ISC",
   "dependencies": {
-    "tinyqueue": "^1.2.2"
+    "tinyqueue": "^2.0.3"
   },
   "devDependencies": {
     "all-the-cities": "2.0.0",

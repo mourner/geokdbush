@@ -1,6 +1,6 @@
 'use strict';
 
-var tinyqueue = require('tinyqueue');
+var TinyQueue = require('tinyqueue');
 
 exports.around = around;
 exports.distance = distance;
@@ -15,7 +15,7 @@ function around(index, lng, lat, maxResults, maxDistance, predicate) {
     if (maxDistance !== undefined) maxHaverSinDist = haverSin(maxDistance / earthRadius);
 
     // a distance-sorted priority queue that will contain both points and kd-tree nodes
-    var q = tinyqueue(null, compareDist);
+    var q = new TinyQueue([], compareDist);
 
     // an object that represents the top kd-tree node (the whole Earth)
     var node = {
