@@ -1,6 +1,6 @@
-## geokdbush [![Build Status](https://travis-ci.org/mourner/geokdbush.svg?branch=master)](https://travis-ci.org/mourner/geokdbush)
+## geokdbush [![Node](https://github.com/mourner/geokdbush/actions/workflows/node.yml/badge.svg)](https://github.com/mourner/geokdbush/actions/workflows/node.yml) [![Simply Awesome](https://img.shields.io/badge/simply-awesome-brightgreen.svg)](https://github.com/mourner/projects)
 
-A geographic extension for [kdbush](https://github.com/mourner/kdbush),
+A geographic extension for [KDBush](https://github.com/mourner/kdbush),
 the fastest static spatial index for points in JavaScript.
 
 It implements fast [nearest neighbors](https://en.wikipedia.org/wiki/Nearest_neighbor_search) queries
