@@ -1,59 +1,53 @@
-'use strict';
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import KDBush from 'kdbush';
+import cities from 'all-the-cities';
+import * as geokdbush from './index.js';
 
-var test = require('tape').test;
-var kdbush = require('kdbush');
-var cities = require('all-the-cities');
-var geokdbush = require('./');
+const index = new KDBush(cities.length);
+for (const {loc: {coordinates: [lon, lat]}} of cities) index.add(lon, lat);
+index.finish();
 
-var index = kdbush(cities, (p) => p.lon, (p) => p.lat);
+test('performs search according to maxResults', () => {
+    const points = geokdbush.around(index, -119.7051, 34.4363, 5);
 
-test('performs search according to maxResults', function (t) {
-    var points = geokdbush.around(index, -119.7051, 34.4363, 5);
-
-    t.same(points.map(p => p.name).join(', '), 'Mission Canyon, Santa Barbara, Montecito, Summerland, Goleta');
-
-    t.end();
+    assert.equal(points.map(id => cities[id].name).join(', '), 'Mission Canyon, Santa Barbara, Montecito, Summerland, Goleta');
 });
 
-test('performs search within maxDistance', function (t) {
-    var points = geokdbush.around(index, 30.5, 50.5, Infinity, 20);
+test('performs search within maxDistance', () => {
+    const points = geokdbush.around(index, 30.5, 50.5, Infinity, 20);
 
-    t.same(points.map(p => p.name).join(', '),
-        'Kiev, Vyshhorod, Kotsyubyns’ke, Sofiyivska Borschagivka, Vyshneve, Kriukivschina, Irpin’, Hostomel’, Khotiv');
-
-    t.end();
+    assert.equal(points.map(id => cities[id].name).join(', '),
+        'Kyiv, Vyshhorod, Pohreby, Kotsyubyns’ke, Horenka, Sofiyivska Borschagivka, Novi Petrivtsi, Vyshneve, Kriukivschina, Irpin, Hostomel, Chabany, Khotiv, Pukhivka');
 });
 
-test('performs search using filter function', function (t) {
-    var points = geokdbush.around(index, 30.5, 50.5, 10, Infinity, p => p.population > 1000000);
+test('performs search using filter function', () => {
+    const points = geokdbush.around(index, 30.5, 50.5, 10, Infinity, id => cities[id].population > 200000 && cities[id].country === 'UA');
 
-    t.same(points.map(p => p.name).join(', '),
-        'Kiev, Dnipropetrovsk, Kharkiv, Minsk, Odessa, Donets’k, Warsaw, Bucharest, Moscow, Rostov-na-Donu');
-
-    t.end();
+    assert.equal(points.map(id => cities[id].name).join(', '),
+        'Kyiv, Chernihiv, Zhytomyr, Cherkasy, Vinnytsia, Kropyvnytskyi, Kremenchuk, Khmelnytskyi, Rivne, Poltava');
 });
 
-test('performs exhaustive search in correct order', function (t) {
-    var points = geokdbush.around(index, 30.5, 50.5);
+test('performs exhaustive search in correct order', () => {
+    const points = geokdbush.around(index, 30.5, 50.5);
 
-    var c = {lon: 30.5, lat: 50.5};
-    var sorted = cities
-        .map((item) => ({item: item, dist: geokdbush.distance(c.lon, c.lat, item.lon, item.lat)}))
+    const lon = 30.5;
+    const lat = 50.5;
+    const sorted = cities
+        .map(({loc: {coordinates: [plon, plat]}}, id) => ({id, dist: geokdbush.distance(lon, lat, plon, plat)}))
         .sort((a, b) => a.dist - b.dist);
 
-    for (var i = 0; i < sorted.length; i++) {
-        var dist = geokdbush.distance(points[i].lon, points[i].lat, c.lon, c.lat);
+    for (let i = 0; i < sorted.length; i++) {
+        const [plon, plat] = cities[points[i]].loc.coordinates;
+        const dist = geokdbush.distance(plon, plat, lon, lat);
         if (dist !== sorted[i].dist) {
-            t.fail(points[i].name + ' vs ' + sorted[i].item.name);
+            assert.fail(`${cities[points[i]].name  } vs ${  cities[sorted[i].id].name}`);
             break;
         }
     }
-    t.pass('all points in correct order');
-
-    t.end();
+    // all points in correct order
 });
 
-test('calculates great circle distance', function (t) {
-    t.equal(10131.7396, Math.round(1e4 * geokdbush.distance(30.5, 50.5, -119.7, 34.4)) / 1e4);
-    t.end();
+test('calculates great circle distance', () => {
+    assert.equal(10131.7396, Math.round(1e4 * geokdbush.distance(30.5, 50.5, -119.7, 34.4)) / 1e4);
 });

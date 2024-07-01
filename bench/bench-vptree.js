@@ -1,43 +1,49 @@
-'use strict';
 
-var cities = require('all-the-cities');
-var VPTreeFactory = require('vptree');
+
+import cities from 'all-the-cities';
+import VPTreeFactory from 'vptree';
 
 console.log('=== vptree.js benchmark ===');
 
-var rad = Math.PI / 180;
+const rad = Math.PI / 180;
 
-var n = cities.length;
-var k = 1000;
+const n = cities.length;
+const k = 1000;
 
-var randomPoints = [];
-for (var i = 0; i < k; i++) randomPoints.push({
-    lon: -180 + 360 * Math.random(),
-    lat: -60 + 140 * Math.random()
+const randomPoints = [];
+for (let i = 0; i < k; i++) randomPoints.push({
+    loc: {
+        coordinates: [
+            -180 + 360 * Math.random(),
+            -60 + 140 * Math.random()
+        ]
+    }
 });
 
 console.time(`index ${n} points`);
-var index = VPTreeFactory.build(cities, distance);
+const index = VPTreeFactory.build(cities, distance);
 console.timeEnd(`index ${n} points`);
 
 console.time('query 1000 closest');
-index.search({lon: -119.7051, lat: 34.4363}, 1000);
+index.search({loc: {coordinates: [-119.7051, 34.4363]}}, 1000);
 console.timeEnd('query 1000 closest');
 
 console.time('query 50000 closest');
-index.search({lon: -119.7051, lat: 34.4363}, 50000);
+index.search({loc: {coordinates: [-119.7051, 34.4363]}}, 50000);
 console.timeEnd('query 50000 closest');
 
 console.time(`query all ${n}`);
-index.search({lon: -119.7051, lat: 34.4363}, Infinity);
+index.search({loc: {coordinates: [-119.7051, 34.4363]}}, Infinity);
 console.timeEnd(`query all ${n}`);
 
 console.time(`${k} random queries of 1 closest`);
-for (i = 0; i < k; i++) index.search({lon: randomPoints[i].lon, lat: randomPoints[i].lat}, 1);
+for (let i = 0; i < k; i++) index.search(randomPoints[i], 1);
 console.timeEnd(`${k} random queries of 1 closest`);
 
 function distance(a, b) {
-    var d = Math.sin(a.lat * rad) * Math.sin(b.lat * rad) +
-            Math.cos(a.lat * rad) * Math.cos(b.lat * rad) * Math.cos((a.lon - b.lon) * rad);
+    const [lon1, lat1] = a.loc.coordinates;
+    const [lon2, lat2] = b.loc.coordinates;
+    const d = Math.sin(lat1 * rad) * Math.sin(lat2 * rad) +
+            Math.cos(lat1 * rad) * Math.cos(lat2 * rad) * Math.cos((lon1 - lon2) * rad);
     return 6371 * Math.acos(Math.min(d, 1));
 }

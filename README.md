@@ -10,12 +10,16 @@ Inspired by [sphere-knn](https://github.com/darkskyapp/sphere-knn), but uses a d
 ### Example
 
 ```js
-var kdbush = require('kdbush');
-var geokdbush = require('geokdbush');
+import KDBush from 'kdbush';
+import * as geokdbush from 'geokdbush';
 
-var index = kdbush(points, (p) => p.lon, (p) => p.lat);
+const index = new KDBush(points.length);
+for (conts {lon, lat} of points) index.add(lon, lat);
+index.finish();
 
-var nearest = geokdbush.around(index, -119.7051, 34.4363, 1000);
+const nearestIds = geokdbush.around(index, -119.7051, 34.4363, 1000);
+
+const nearest = nearestIds.map(id => points[id]);
 ```
 
 ### API
@@ -39,12 +43,12 @@ Returns great circle distance between two locations in kilometers.
 
 This library is incredibly fast.
 The results below were obtained with `npm run bench`
-(Node v7.7.2, Macbook Pro 15 mid-2012).
+(Node v20, Macbook Pro 2020 M1 Pro).
 
 benchmark | geokdbush | sphere-knn | naive
 --- | ---: | ---: | ---:
-index 138398 points | 69ms | 967ms | n/a
-query 1000 closest | 4ms | 4ms | 155ms
-query 50000 closest | 31ms | 368ms | 155ms
-query all 138398 | 80ms | 29.7s | 155ms
-1000 queries of 1 | 55ms | 165ms | 18.4s
+index 138398 points | 57.6ms | 408ms | n/a
+query 1000 closest | 1.6ms | 1.8ms | 72ms
+query 50000 closest | 14.7ms | 91.5ms | 72ms
+query all 138398 | 33.7ms | 500ms | 72ms
+1000 queries of 1 | 24.7ms | 27.5ms | 11.1s

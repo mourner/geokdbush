@@ -1,21 +1,23 @@
-'use strict';
 
-var cities = require('all-the-cities');
-var sphereKnn = require('sphere-knn');
+
+import cities from 'all-the-cities';
+import sphereKnn from 'sphere-knn';
 
 console.log('=== sphere-knn benchmark ===');
 
-var n = cities.length;
-var k = 1000;
+const n = cities.length;
+const k = 1000;
 
-var randomPoints = [];
-for (var i = 0; i < k; i++) randomPoints.push({
+const randomPoints = [];
+for (let i = 0; i < k; i++) randomPoints.push({
     lon: -180 + 360 * Math.random(),
     lat: -60 + 140 * Math.random()
 });
 
+const locations = cities.map(c => c.loc.coordinates);
+
 console.time(`index ${cities.length} points`);
-var sphereKnnLookup = sphereKnn(cities);
+const sphereKnnLookup = sphereKnn(locations);
 console.timeEnd(`index ${cities.length} points`);
 
 console.time('query 1000 closest');
@@ -31,5 +33,5 @@ sphereKnnLookup(34.4363, -119.7051, Infinity);
 console.timeEnd(`query all ${n}`);
 
 console.time(`${k} random queries of 1 closest`);
-for (i = 0; i < k; i++) sphereKnnLookup(randomPoints[i].lat, randomPoints[i].lon, 1);
+for (let i = 0; i < k; i++) sphereKnnLookup(randomPoints[i].lat, randomPoints[i].lon, 1);
 console.timeEnd(`${k} random queries of 1 closest`);
