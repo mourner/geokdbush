@@ -8,6 +8,7 @@
   "dependencies": {
     "tinyqueue": "^2.0.3"
   },
+  "files": [],
   "repository": {
     "type": "git",
     "url": "https://github.com/mourner/geokdbush.git"
