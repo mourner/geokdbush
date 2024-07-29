@@ -14,7 +14,7 @@ import KDBush from 'kdbush';
 import * as geokdbush from 'geokdbush';
 
 const index = new KDBush(points.length);
-for (conts {lon, lat} of points) index.add(lon, lat);
+for (const {lon, lat} of points) index.add(lon, lat);
 index.finish();
 
 const nearestIds = geokdbush.around(index, -119.7051, 34.4363, 1000);
