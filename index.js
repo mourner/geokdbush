@@ -212,7 +212,7 @@ function haverSinDist(lng1, lat1, lng2, lat2, cosLat1) {
 }
 
 /**
- * Returns gerat circle distance between two locations in kilometers.
+ * Returns great circle distance between two locations in kilometers.
  *
  * @param {number} lng1
  * @param {number} lat1
