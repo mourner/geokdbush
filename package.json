@@ -9,7 +9,7 @@
   "author": "Vladimir Agafonkin <agafonkin@gmail.com>",
   "license": "ISC",
   "dependencies": {
-    "tinyqueue": "^2.0.3"
+    "tinyqueue": "^3.0.0"
   },
   "files": [
     "index.d.ts"
@@ -20,8 +20,8 @@
   },
   "devDependencies": {
     "all-the-cities": "3.1.0",
-    "eslint": "^9.6.0",
-    "eslint-config-mourner": "^4.0.1",
+    "eslint": "^10.2.0",
+    "eslint-config-mourner": "^4.1.0",
     "kdbush": "^4.0.2",
     "sphere-knn": "^1.4.0",
     "typescript": "^6.0.2",
