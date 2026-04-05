@@ -3,12 +3,17 @@
   "version": "2.0.1",
   "type": "module",
   "main": "index.js",
+  "exports": "./index.js",
+  "types": "index.d.ts",
+  "sideEffects": false,
   "author": "Vladimir Agafonkin <agafonkin@gmail.com>",
   "license": "ISC",
   "dependencies": {
     "tinyqueue": "^2.0.3"
   },
-  "files": [],
+  "files": [
+    "index.d.ts"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/mourner/geokdbush.git"
@@ -19,11 +24,12 @@
     "eslint-config-mourner": "^4.0.1",
     "kdbush": "^4.0.2",
     "sphere-knn": "^1.4.0",
+    "typescript": "^6.0.2",
     "vptree": "^1.0.0"
   },
   "scripts": {
     "pretest": "eslint index.js test.js bench",
-    "test": "node test.js",
+    "test": "tsc && node test.js",
     "bench": "cd bench && node bench-geokdbush && node bench-sphere-knn && node bench-naive && node bench-vptree"
   }
 }
